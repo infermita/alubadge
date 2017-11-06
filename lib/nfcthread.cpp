@@ -73,21 +73,6 @@ void NfcThread::run(){
                      url = "/default/json/badge/cardkeyw/"+id;
                      resp = http.Get(url);
 
-                     uint8_t output = 0;
-                     int on = 0;
-                     for(i = 0; i < 4;i++){
-                         if(on){
-                             output |= (1<<3);
-                             on = 0;
-                         }else{
-                             output &=~ (1<<3);
-                             on = 1;
-                         }
-                         wLcd->send_command(output);
-                         usleep(100000);
-
-                     }
-
                      d = QJsonDocument::fromJson(resp.toUtf8(),error);
 
                      if(error->error==QJsonParseError::NoError){

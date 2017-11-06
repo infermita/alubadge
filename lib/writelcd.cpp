@@ -17,6 +17,9 @@ void WriteLcd::write_word(int data){
     temp &= 0xF7;
     wiringPiI2CWrite(fd, temp);
 }
+void WriteLcd::backlight(int data){
+    wiringPiI2CWrite(fd, data);
+}
 void WriteLcd::send_command(int comm){
     int buf;
     // Send bit7-4 firstly

@@ -73,7 +73,7 @@ void NfcThread::run(){
                      url = "/default/json/badge/cardkeyw/"+id;
                      resp = http.Get(url);
 
-                     uint8_t output;
+                     uint8_t output = 0;
                      int on = 0;
                      for(i = 0; i < 4;i++){
                          if(on){

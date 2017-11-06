@@ -11,6 +11,7 @@ class WriteLcd
 public:
     WriteLcd();
     void write_word(int data);
+    void backlight(int data);
     void send_command(int comm);
     void send_data(int data);
     void init();

@@ -96,6 +96,7 @@ void NfcThread::run(){
                      while(!nfc_initiator_target_is_present(pnd,&nt)){
                          sleep(1);
                      }
+                     sleep(2);
                      wLcd->clear();
                      wLcd->write(0,0,"Attesa badge");
 

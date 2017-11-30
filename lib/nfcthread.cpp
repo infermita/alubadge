@@ -10,6 +10,12 @@
 NfcThread::NfcThread()
 {
 
+    QTimer *viewDet;
+    viewDet = new QTimer();
+    connect(viewDet, SIGNAL(timeout()),
+              this, SLOT(ViewData()),Qt::DirectConnection);
+    viewDet->start(1000);
+
 }
 void NfcThread::run(){
 
@@ -24,7 +30,6 @@ void NfcThread::run(){
     wLcd = new WriteLcd();
     QJsonParseError *error = new QJsonParseError();
     QJsonDocument d;
-    vieData = 1;
 
     wLcd->clear();
     wLcd->write(0,0,"Attesa rete");
@@ -44,12 +49,8 @@ void NfcThread::run(){
 
     wLcd->clear();
     wLcd->write(0,0,"Attesa badge");
+    vieData = 1;
 
-    QTimer *viewDet;
-    viewDet = new QTimer();
-    connect(viewDet, SIGNAL(timeout()),
-              this, SLOT(ViewData()),Qt::DirectConnection);
-    viewDet->start(1000);
 
     while(1){
          nfc_init(&context);

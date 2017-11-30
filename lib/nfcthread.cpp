@@ -1,10 +1,11 @@
 #include "nfcthread.h"
 #include "lib/httpclient.h"
-#include "lib/writelcd.h"
 #include <QDebug>
 #include <QNetworkInterface>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QTimer>
+#include <QDateTime>
 
 NfcThread::NfcThread()
 {
@@ -20,9 +21,10 @@ void NfcThread::run(){
     HttpClient http;
     int i;
     bool ipcheck = true;
-    WriteLcd *wLcd = new WriteLcd();
+    wLcd = new WriteLcd();
     QJsonParseError *error = new QJsonParseError();
     QJsonDocument d;
+    vieData = 1;
 
     wLcd->clear();
     wLcd->write(0,0,"Attesa rete");
@@ -43,6 +45,12 @@ void NfcThread::run(){
     wLcd->clear();
     wLcd->write(0,0,"Attesa badge");
 
+    QTimer *viewDet;
+    viewDet = new QTimer();
+    connect(viewDet, SIGNAL(timeout()),
+              this, SLOT(ViewData()),Qt::DirectConnection);
+    viewDet->start(1000);
+
     while(1){
          nfc_init(&context);
          pnd = nfc_open(context, NULL);
@@ -62,6 +70,7 @@ void NfcThread::run(){
                  qDebug() << "Nfc iniator";
                  if(nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) > 0){
                      id = "";
+                     vieData = 0;
                      for(i = 0; i < nt.nti.nai.szUidLen;i++){
 
                          QString hex;
@@ -99,7 +108,7 @@ void NfcThread::run(){
                      sleep(2);
                      wLcd->clear();
                      wLcd->write(0,0,"Attesa badge");
-
+                     vieData = 1;
 
                      nfc_close(pnd);
                      nfc_exit(context);
@@ -108,5 +117,15 @@ void NfcThread::run(){
              }
          }
      }
+
+}
+void NfcThread::ViewData(){
+
+    if(vieData==1){
+
+        QString txt = QDateTime::currentDateTime().toString("dd-MM   hh:mm:ss")+" ";
+        wLcd->write(0,1,txt.toUtf8().data());
+
+    }
 
 }

@@ -5,6 +5,7 @@
 #include <QObject>
 #include <nfc/nfc.h>
 #include <QThread>
+#include "lib/writelcd.h"
 
 class NfcThread : public QThread
 {
@@ -16,6 +17,10 @@ private:
     nfc_target nt;
     nfc_context *context;
     nfc_device *pnd;
+    int vieData;
+    WriteLcd *wLcd;
+public slots:
+    void ViewData();
 };
 
 #endif // NFCTHREAD_H

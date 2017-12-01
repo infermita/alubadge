@@ -67,6 +67,7 @@ void WriteLcd::init(){
     wiringPiI2CWrite(fd, 0x08);
 }
 void WriteLcd::clear(){
+    init();
     send_command(0x01); //clear Screen
 }
 void WriteLcd::write(int x, int y, char data[]){

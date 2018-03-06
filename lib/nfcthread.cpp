@@ -80,6 +80,9 @@ void NfcThread::run(){
                      }
                      qDebug() << "Leggo: " << id;
 
+                     wLcd->clear();
+                     wLcd->write(0,0,"Attendere");
+
                      url = "/default/json/badge/cardkeyw/"+id;
                      resp = http.Get(url);
 

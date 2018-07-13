@@ -32,7 +32,7 @@ void NfcThread::run(){
     QJsonDocument d;
 
     wLcd->clear();
-    wLcd->write(0,0,"Attesa rete");
+    wLcd->write(0,0,"Attesa rete     ");
 
     while(ipcheck){
 
@@ -48,7 +48,7 @@ void NfcThread::run(){
 
 
     wLcd->clear();
-    wLcd->write(0,0,"Attesa badge");
+    wLcd->write(0,0,"Attesa badge   ");
     vieData = 1;
 
 
@@ -111,7 +111,7 @@ void NfcThread::run(){
                      }
                      sleep(2);
                      wLcd->clear();
-                     wLcd->write(0,0,"Attesa badge");
+                     wLcd->write(0,0,"Attesa badge   ");
                      vieData = 1;
 
                      nfc_close(pnd);

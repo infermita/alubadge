@@ -39,7 +39,7 @@ void NfcThread::run(){
 
     //wLcd->clear();
     //wLcd->write(0,0,"Attesa rete     ");
-    WriteLcdT(0,0,"Attesa rete     ");
+    WriteLcdT(0,0,"Attesa rete     ",true);
 
 
     while(ipcheck){
@@ -96,7 +96,7 @@ void NfcThread::run(){
     lcd = "Attesa badge";
     lcd = lcd+repeat.repeated(16 - lcd.length());
     //wLcd->write(0,0,lcd.toUtf8().data());
-    WriteLcdT(0,0,lcd);
+    WriteLcdT(0,0,lcd,true);
     vieData = 1;
 
 
@@ -181,11 +181,11 @@ void NfcThread::ViewData(){
 
         QString txt = QDateTime::currentDateTime().toString("dd-MM   hh:mm:ss")+" ";
         //wLcd->write(0,1,txt.toUtf8().data());
-        WriteLcdT(0,1,txt);
+        WriteLcdT(0,1,txt,false);
 
     }
     int sec = QTime::currentTime().second();
-    qDebug() << "Seconds " << sec;
+    //qDebug() << "Seconds " << sec;
     if(sec==0){
 
         if(!wdbserver.isRunning())
@@ -195,10 +195,13 @@ void NfcThread::ViewData(){
 
 }
 
-void NfcThread::WriteLcdT(int x,int y, QString data){
+void NfcThread::WriteLcdT(int x,int y, QString data,bool clear){
 
     if(QString(getenv("USER"))!="alberto"){
-        wLcd->clear();
+
+        if(clear)
+            wLcd->clear();
+
         wLcd->write(x,y,data.toUtf8().data());
     }
 

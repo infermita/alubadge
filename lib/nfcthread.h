@@ -23,7 +23,7 @@ private:
     WriteLcd *wLcd;
     int writedb;
     QTimer *tdb;
-    void WriteLcdT(int x,int y, QString data);
+    void WriteLcdT(int x,int y, QString data,bool clear);
     WriteDbServer wdbserver;
 public slots:
     void ViewData();

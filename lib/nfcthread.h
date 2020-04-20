@@ -5,7 +5,9 @@
 #include <QObject>
 #include <nfc/nfc.h>
 #include <QThread>
+#include <QTimer>
 #include "lib/writelcd.h"
+#include "lib/writedbserver.h"
 
 class NfcThread : public QThread
 {
@@ -19,6 +21,10 @@ private:
     nfc_device *pnd;
     int vieData;
     WriteLcd *wLcd;
+    int writedb;
+    QTimer *tdb;
+    void WriteLcdT(int x,int y, QString data);
+    WriteDbServer wdbserver;
 public slots:
     void ViewData();
 };

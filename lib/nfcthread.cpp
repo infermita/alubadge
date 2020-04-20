@@ -6,6 +6,8 @@
 #include <QJsonDocument>
 #include <QTimer>
 #include <QDateTime>
+#include <QJsonArray>
+#include "dao.h"
 
 NfcThread::NfcThread()
 {
@@ -15,6 +17,7 @@ NfcThread::NfcThread()
     connect(viewDet, SIGNAL(timeout()),
               this, SLOT(ViewData()),Qt::DirectConnection);
     viewDet->start(1000);
+    writedb = 0;
 
 }
 void NfcThread::run(){
@@ -27,16 +30,25 @@ void NfcThread::run(){
     HttpClient http;
     int i;
     bool ipcheck = true;
-    wLcd = new WriteLcd();
+    if(QString(getenv("USER"))!="alberto")
+        wLcd = new WriteLcd();
+
     QJsonParseError *error = new QJsonParseError();
     QJsonDocument d;
+    Dao dao;
 
-    wLcd->clear();
-    wLcd->write(0,0,"Attesa rete     ");
+    //wLcd->clear();
+    //wLcd->write(0,0,"Attesa rete     ");
+    WriteLcdT(0,0,"Attesa rete     ");
+
 
     while(ipcheck){
 
-        ip = QNetworkInterface::interfaceFromName("wlan0").addressEntries().first().ip().toString();
+        if(QString(getenv("USER"))=="alberto"){
+            ip = QNetworkInterface::interfaceFromName("wlp5s0").addressEntries().first().ip().toString();
+        }else{
+            ip = QNetworkInterface::interfaceFromName("wlan0").addressEntries().first().ip().toString();
+        }
 
         qDebug() << "Attesa rete con ip: " << ip << " count: " << QString::number(ip.split(".").count());
 
@@ -46,11 +58,45 @@ void NfcThread::run(){
             sleep(1);
     }
 
+    url = "/default/json/getdbbadge/";
 
-    wLcd->clear();
+    resp = http.Get(url);
+
+    d = QJsonDocument::fromJson(resp.toUtf8(),error);
+
+    if(error->error==QJsonParseError::NoError){
+
+        dao.deleteRow("cards","1");
+
+        QJsonObject jObj = d.object();
+        QJsonArray listUsers;
+        QHash<QString,QString> field;
+
+        listUsers = jObj["list"].toArray();
+        foreach (const QJsonValue & users, listUsers) {
+
+            field.clear();
+
+            QJsonObject o = users.toObject();
+            qDebug() << "Id user: " << o["id"].toString();
+            field.insert("id",o["id"].toString());
+            field.insert("cardkey",o["cardkey"].toString());
+            field.insert("`name`",o["name_lastname"].toString());
+
+            if(dao.replaceRow("workers",field)){
+                qDebug() << "Ok insert: " << o["id"].toString();
+            }else{
+                qDebug() << "Error insert: " << o["id"].toString();
+            }
+
+        }
+    }
+
+    //wLcd->clear();
     lcd = "Attesa badge";
     lcd = lcd+repeat.repeated(16 - lcd.length());
-    wLcd->write(0,0,lcd.toUtf8().data());
+    //wLcd->write(0,0,lcd.toUtf8().data());
+    WriteLcdT(0,0,lcd);
     vieData = 1;
 
 
@@ -58,7 +104,7 @@ void NfcThread::run(){
          nfc_init(&context);
          pnd = nfc_open(context, NULL);
          if (pnd == NULL) {
-             qDebug() << "ERROR: %s. Unable to open NFC device.";
+             //qDebug() << "ERROR: %s. Unable to open NFC device.";
 
          }else{
 
@@ -134,8 +180,26 @@ void NfcThread::ViewData(){
     if(vieData==1){
 
         QString txt = QDateTime::currentDateTime().toString("dd-MM   hh:mm:ss")+" ";
-        wLcd->write(0,1,txt.toUtf8().data());
+        //wLcd->write(0,1,txt.toUtf8().data());
+        WriteLcdT(0,1,txt);
 
+    }
+    int sec = QTime::currentTime().second();
+    qDebug() << "Seconds " << sec;
+    if(sec==0){
+
+        if(!wdbserver.isRunning())
+            wdbserver.start();
+
+    }
+
+}
+
+void NfcThread::WriteLcdT(int x,int y, QString data){
+
+    if(QString(getenv("USER"))!="alberto"){
+        wLcd->clear();
+        wLcd->write(x,y,data.toUtf8().data());
     }
 
 }

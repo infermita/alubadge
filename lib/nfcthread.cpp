@@ -128,10 +128,11 @@ void NfcThread::run(){
                      }
                      qDebug() << "Leggo: " << id;
 
-                     wLcd->clear();
+                     //wLcd->clear();
                      lcd = "Attendere";
                      lcd = lcd+repeat.repeated(16 - lcd.length());
-                     wLcd->write(0,0,lcd.toUtf8().data());
+                     //wLcd->write(0,0,lcd.toUtf8().data());
+                     WriteLcdT(0,0,lcd,true);
 
                      url = "/default/json/badge/cardkeyw/"+id;
                      resp = http.Get(url);
@@ -142,28 +143,32 @@ void NfcThread::run(){
 
                          lcd = d.object().value("mess").toString();
                          lcd = lcd+repeat.repeated(16 - lcd.length());
-                         wLcd->write(0,0,lcd.toUtf8().data());
+                         //wLcd->write(0,0,lcd.toUtf8().data());
+                         WriteLcdT(0,0,lcd,true);
 
                          lcd = d.object().value("name").toString();
                          lcd = lcd+repeat.repeated(16 - lcd.length());
-                         wLcd->write(0,1,lcd.toUtf8().data());
+                         //wLcd->write(0,1,lcd.toUtf8().data());
+                         WriteLcdT(0,1,lcd,false);
 
 
 
                      }else{
                          lcd = "Errore Server";
                          lcd = lcd+repeat.repeated(16 - lcd.length());
-                         wLcd->write(0,0,lcd.toUtf8().data());
+                         //wLcd->write(0,0,lcd.toUtf8().data());
+                         WriteLcdT(0,0,lcd,true);
                      }
 
                      while(!nfc_initiator_target_is_present(pnd,&nt)){
                          sleep(1);
                      }
                      sleep(2);
-                     wLcd->clear();
+                     //wLcd->clear();
                      lcd = "Attesa badge";
                      lcd = lcd+repeat.repeated(16 - lcd.length());
-                     wLcd->write(0,0,lcd.toUtf8().data());
+                     //wLcd->write(0,0,lcd.toUtf8().data());
+                     WriteLcdT(0,0,lcd,true);
                      vieData = 1;
 
                      nfc_close(pnd);

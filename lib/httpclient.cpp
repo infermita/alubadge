@@ -86,9 +86,8 @@ bool HttpClient::Post(QString url, QByteArray data){
 
     if(statusCode.toInt()==200){
 
-        qDebug() << "Leggo: " << rep->readAll();
-
-        ret = true;
+        if(rep->readAll()=="OK")
+            ret = true;
 
     }
 

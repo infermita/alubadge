@@ -7,6 +7,7 @@
 #include <QTimer>
 #include <QDateTime>
 #include <QJsonArray>
+#include <QCoreApplication>
 
 NfcThread::NfcThread()
 {
@@ -17,6 +18,8 @@ NfcThread::NfcThread()
             this, SLOT(ViewData()),Qt::DirectConnection);
     viewDet->start(1000);
     writedb = 0;
+    hour = QString(QCoreApplication::arguments().at(1)).toInt();
+
 
 }
 void NfcThread::run(){
@@ -40,6 +43,7 @@ void NfcThread::run(){
     //wLcd->write(0,0,"Attesa rete     ");
     WriteLcdT(0,0,"Attesa rete     ",true);
 
+    qDebug() << "Scheduling sarà fatto alle " << hour;
 
     while(ipcheck){
 
@@ -191,13 +195,24 @@ void NfcThread::ViewData(){
         WriteLcdT(0,1,txt,false);
 
     }
-    int sec = QTime::currentTime().second();
+    //int sec = QTime::currentTime().hour();
     //qDebug() << "Seconds " << sec;
-    if(sec==0){
+    if(hour==QTime::currentTime().hour()){
 
-        if(!wdbserver.isRunning())
-            wdbserver.start();
+        if(writedb==0){
 
+            if(wdbserver.isRunning()){
+                qDebug() << "Il thread webdbserver sta ancora girando, controllare";
+            }else{
+                qDebug() << "Parte thread webdbserver ore " << hour;
+                wdbserver.start();
+                writedb = 1;
+            }
+        }
+
+    }else if(writedb){
+        qDebug() << "Imposto write db a 0 ";
+        writedb = 0;
     }
 
 }
@@ -218,6 +233,7 @@ void NfcThread::WriteDB(QString id){
     QHash<QString,QString> resQ = dao.singleRow("workers","cardkey='"+id+"'");
     field.clear();
     QString lcd,repeat = " ",idW,name,where;
+    bool res;
     if(resQ.count()){
 
         idW = resQ.value("id");
@@ -229,43 +245,9 @@ void NfcThread::WriteDB(QString id){
             field.insert("data",QDateTime::currentDateTime().toString("yyyy-MM-dd"));
             field.insert("id_worker",idW);
             field.insert("indt",QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
-            dao.insertRow("giorni",field);
+            res = dao.insertRow("giorni",field);
 
-            lcd = "Entrata";
-            lcd = lcd+repeat.repeated(16 - lcd.length());
-            //wLcd->write(0,0,lcd.toUtf8().data());
-            WriteLcdT(0,0,lcd,true);
-
-            lcd = name;
-            lcd = lcd+repeat.repeated(16 - lcd.length());
-            //wLcd->write(0,1,lcd.toUtf8().data());
-            WriteLcdT(0,1,lcd,false);
-        }else{
-
-            if(resQ.value("outdt")==""){
-
-                where = "id="+resQ.value("id");
-
-                QStringList sets;
-                sets.append("outdt='"+QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss")+"'");
-
-                dao.updateRow("giorni",sets,where);
-
-                lcd = "Uscita";
-                lcd = lcd+repeat.repeated(16 - lcd.length());
-                //wLcd->write(0,0,lcd.toUtf8().data());
-                WriteLcdT(0,0,lcd,true);
-
-                lcd = name;
-                lcd = lcd+repeat.repeated(16 - lcd.length());
-                //wLcd->write(0,1,lcd.toUtf8().data());
-                WriteLcdT(0,1,lcd,false);
-            }else{
-
-                field.insert("data",QDateTime::currentDateTime().toString("yyyy-MM-dd"));
-                field.insert("id_worker",idW);
-                field.insert("indt",QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
-                dao.insertRow("giorni",field);
+            if(res){
 
                 lcd = "Entrata";
                 lcd = lcd+repeat.repeated(16 - lcd.length());
@@ -276,6 +258,64 @@ void NfcThread::WriteDB(QString id){
                 lcd = lcd+repeat.repeated(16 - lcd.length());
                 //wLcd->write(0,1,lcd.toUtf8().data());
                 WriteLcdT(0,1,lcd,false);
+            }else{
+                lcd = "errore database";
+                lcd = lcd+repeat.repeated(16 - lcd.length());
+                //wLcd->write(0,0,lcd.toUtf8().data());
+                WriteLcdT(0,0,lcd,true);
+            }
+        }else{
+
+            if(resQ.value("outdt")==""){
+
+                where = "id="+resQ.value("id");
+
+                QStringList sets;
+                sets.append("outdt='"+QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss")+"'");
+
+                res = dao.updateRow("giorni",sets,where);
+
+                if(res){
+
+                    lcd = "Uscita";
+                    lcd = lcd+repeat.repeated(16 - lcd.length());
+                    //wLcd->write(0,0,lcd.toUtf8().data());
+                    WriteLcdT(0,0,lcd,true);
+
+                    lcd = name;
+                    lcd = lcd+repeat.repeated(16 - lcd.length());
+                    //wLcd->write(0,1,lcd.toUtf8().data());
+                    WriteLcdT(0,1,lcd,false);
+                }else{
+                    lcd = "errore database";
+                    lcd = lcd+repeat.repeated(16 - lcd.length());
+                    //wLcd->write(0,0,lcd.toUtf8().data());
+                    WriteLcdT(0,0,lcd,true);
+                }
+            }else{
+
+                field.insert("data",QDateTime::currentDateTime().toString("yyyy-MM-dd"));
+                field.insert("id_worker",idW);
+                field.insert("indt",QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+                res = dao.insertRow("giorni",field);
+
+                if(res){
+
+                    lcd = "Entrata";
+                    lcd = lcd+repeat.repeated(16 - lcd.length());
+                    //wLcd->write(0,0,lcd.toUtf8().data());
+                    WriteLcdT(0,0,lcd,true);
+
+                    lcd = name;
+                    lcd = lcd+repeat.repeated(16 - lcd.length());
+                    //wLcd->write(0,1,lcd.toUtf8().data());
+                    WriteLcdT(0,1,lcd,false);
+                }else{
+                    lcd = "errore database";
+                    lcd = lcd+repeat.repeated(16 - lcd.length());
+                    //wLcd->write(0,0,lcd.toUtf8().data());
+                    WriteLcdT(0,0,lcd,true);
+                }
 
             }
 

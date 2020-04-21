@@ -10,6 +10,7 @@ class HttpClient
 public:
     HttpClient();
     QString Get(QString url);
+    bool Post(QString url,QByteArray data);
 private:
     bool lock;
 };

@@ -29,6 +29,7 @@ private:
     void WriteDB(QString id);
     Dao dao;
     QHash<QString,QString> field;
+    int hour;
 public slots:
     void ViewData();
 };

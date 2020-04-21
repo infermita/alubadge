@@ -62,3 +62,36 @@ QString HttpClient::Get(QString url){
     }*/
 
 }
+bool HttpClient::Post(QString url, QByteArray data){
+
+    QNetworkAccessManager manager;
+    QEventLoop loop;
+    QNetworkReply *rep;
+    bool ret = false;
+    QUrl serviceUrl = QUrl("http://alucount.al.it"+url);
+
+    QObject::connect(&manager, SIGNAL(finished(QNetworkReply*)),&loop, SLOT(quit()));
+    QNetworkRequest request(serviceUrl);
+    request.setHeader(QNetworkRequest::ContentTypeHeader,"application/x-www-form-urlencoded");
+    rep = manager.post(request,data);
+    qDebug() << "HttpC Chiamo url: " << serviceUrl.toString();
+
+    loop.exec();
+
+    QVariant statusCode = rep->attribute( QNetworkRequest::HttpStatusCodeAttribute );
+
+    qDebug() << "HttpC risposta: " << statusCode.toString();
+
+    lock = false;
+
+    if(statusCode.toInt()==200){
+
+        qDebug() << "Leggo: " << rep->readAll();
+
+        ret = true;
+
+    }
+
+    return ret;
+
+}

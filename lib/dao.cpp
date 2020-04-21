@@ -24,7 +24,7 @@ Dao::Dao()
         sql = "PRAGMA journal_mode = MEMORY;";
         res = query.exec(sql);
 
-        sql = "SELECT * FROM cards;";
+        sql = "SELECT * FROM workers;";
         res = query.exec(sql);
 
         QSqlRecord record = query.record();
@@ -37,7 +37,8 @@ Dao::Dao()
 
             sql = "CREATE TABLE workers (id INT PRIMARY KEY NOT NULL,cardkey char(30),name char(60));";
             res = query.exec(sql);
-
+            sql = "CREATE TABLE `giorni` (`id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,`id_commesse`	INTEGER NOT NULL DEFAULT 5,`id_worker`	INTEGER NOT NULL DEFAULT 0,`data`	NUMERIC,`indt`	NUMERIC,`outdt`	NUMERIC);";
+            res = query.exec(sql);
 
             qDebug() << "db non esiste";
 
@@ -132,6 +133,8 @@ bool Dao::updateRow(QString table,QStringList values,QString where){
     if(where!=NULL)
         sql += " WHERE "+where;
 
+    qDebug() << sql;
+
     if(query.exec(sql))
         ret = true;
 
@@ -157,7 +160,7 @@ bool Dao::insertRow(QString table,QHash<QString, QString> fieldsVals){
 
     }
     QString sql = "INSERT INTO "+table+" ("+fields.join(",")+") VALUES('"+values.join("','")+"')";
-    //qDebug() << sql;
+    qDebug() << sql;
 
     if(query.exec(sql))
         ret = true;

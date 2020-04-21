@@ -7,7 +7,6 @@
 #include <QTimer>
 #include <QDateTime>
 #include <QJsonArray>
-#include "dao.h"
 
 NfcThread::NfcThread()
 {
@@ -15,7 +14,7 @@ NfcThread::NfcThread()
     QTimer *viewDet;
     viewDet = new QTimer();
     connect(viewDet, SIGNAL(timeout()),
-              this, SLOT(ViewData()),Qt::DirectConnection);
+            this, SLOT(ViewData()),Qt::DirectConnection);
     viewDet->start(1000);
     writedb = 0;
 
@@ -35,7 +34,7 @@ void NfcThread::run(){
 
     QJsonParseError *error = new QJsonParseError();
     QJsonDocument d;
-    Dao dao;
+
 
     //wLcd->clear();
     //wLcd->write(0,0,"Attesa rete     ");
@@ -70,7 +69,7 @@ void NfcThread::run(){
 
         QJsonObject jObj = d.object();
         QJsonArray listUsers;
-        QHash<QString,QString> field;
+
 
         listUsers = jObj["list"].toArray();
         foreach (const QJsonValue & users, listUsers) {
@@ -99,41 +98,44 @@ void NfcThread::run(){
     WriteLcdT(0,0,lcd,true);
     vieData = 1;
 
+    //WriteDB("350938BE");
 
     while(1){
-         nfc_init(&context);
-         pnd = nfc_open(context, NULL);
-         if (pnd == NULL) {
-             //qDebug() << "ERROR: %s. Unable to open NFC device.";
+        nfc_init(&context);
+        pnd = nfc_open(context, NULL);
+        if (pnd == NULL) {
+            //qDebug() << "ERROR: %s. Unable to open NFC device.";
 
-         }else{
+        }else{
 
-             qDebug() << "Nfc aperto";
+            qDebug() << "Nfc aperto";
 
-             if (nfc_initiator_init(pnd) < 0) {
-                 qDebug() << "nfc_initiator_init";
-                 nfc_close(pnd);
-                 nfc_exit(context);
+            if (nfc_initiator_init(pnd) < 0) {
+                qDebug() << "nfc_initiator_init";
+                nfc_close(pnd);
+                nfc_exit(context);
 
-             }else{
-                 qDebug() << "Nfc iniator";
-                 if(nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) > 0){
-                     id = "";
-                     vieData = 0;
-                     for(i = 0; i < nt.nti.nai.szUidLen;i++){
+            }else{
+                qDebug() << "Nfc iniator";
+                if(nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &nt) > 0){
+                    id = "";
+                    vieData = 0;
+                    for(i = 0; i < nt.nti.nai.szUidLen;i++){
 
-                         QString hex;
-                         id += hex.sprintf("%02x",nt.nti.nai.abtUid[i]).toUpper();
+                        QString hex;
+                        id += hex.sprintf("%02x",nt.nti.nai.abtUid[i]).toUpper();
 
-                     }
-                     qDebug() << "Leggo: " << id;
+                    }
+                    qDebug() << "Leggo: " << id;
 
-                     //wLcd->clear();
-                     lcd = "Attendere";
-                     lcd = lcd+repeat.repeated(16 - lcd.length());
-                     //wLcd->write(0,0,lcd.toUtf8().data());
-                     WriteLcdT(0,0,lcd,true);
+                    //wLcd->clear();
+                    lcd = "Attendere";
+                    lcd = lcd+repeat.repeated(16 - lcd.length());
+                    //wLcd->write(0,0,lcd.toUtf8().data());
+                    WriteLcdT(0,0,lcd,true);
 
+                    WriteDB(id);
+                    /*
                      url = "/default/json/badge/cardkeyw/"+id;
                      resp = http.Get(url);
 
@@ -159,25 +161,25 @@ void NfcThread::run(){
                          //wLcd->write(0,0,lcd.toUtf8().data());
                          WriteLcdT(0,0,lcd,true);
                      }
+                     */
+                    while(!nfc_initiator_target_is_present(pnd,&nt)){
+                        sleep(1);
+                    }
+                    sleep(2);
+                    //wLcd->clear();
+                    lcd = "Attesa badge";
+                    lcd = lcd+repeat.repeated(16 - lcd.length());
+                    //wLcd->write(0,0,lcd.toUtf8().data());
+                    WriteLcdT(0,0,lcd,true);
+                    vieData = 1;
 
-                     while(!nfc_initiator_target_is_present(pnd,&nt)){
-                         sleep(1);
-                     }
-                     sleep(2);
-                     //wLcd->clear();
-                     lcd = "Attesa badge";
-                     lcd = lcd+repeat.repeated(16 - lcd.length());
-                     //wLcd->write(0,0,lcd.toUtf8().data());
-                     WriteLcdT(0,0,lcd,true);
-                     vieData = 1;
+                    nfc_close(pnd);
+                    nfc_exit(context);
 
-                     nfc_close(pnd);
-                     nfc_exit(context);
-
-                 }
-             }
-         }
-     }
+                }
+            }
+        }
+    }
 
 }
 void NfcThread::ViewData(){
@@ -207,7 +209,90 @@ void NfcThread::WriteLcdT(int x,int y, QString data,bool clear){
         if(clear)
             wLcd->clear();
 
-        wLcd->write(x,y,data.toUtf8().data());
+        wLcd->write(x,y,data.toUpper().toUtf8().data());
+    }
+
+}
+void NfcThread::WriteDB(QString id){
+
+    QHash<QString,QString> resQ = dao.singleRow("workers","cardkey='"+id+"'");
+    field.clear();
+    QString lcd,repeat = " ",idW,name,where;
+    if(resQ.count()){
+
+        idW = resQ.value("id");
+        name = resQ.value("name");
+        resQ = dao.singleRow("giorni","id_worker='"+idW+"' ORDER BY id DESC LIMIT 1");
+
+        if(resQ.count()==0){
+
+            field.insert("data",QDateTime::currentDateTime().toString("yyyy-MM-dd"));
+            field.insert("id_worker",idW);
+            field.insert("indt",QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+            dao.insertRow("giorni",field);
+
+            lcd = "Entrata";
+            lcd = lcd+repeat.repeated(16 - lcd.length());
+            //wLcd->write(0,0,lcd.toUtf8().data());
+            WriteLcdT(0,0,lcd,true);
+
+            lcd = name;
+            lcd = lcd+repeat.repeated(16 - lcd.length());
+            //wLcd->write(0,1,lcd.toUtf8().data());
+            WriteLcdT(0,1,lcd,false);
+        }else{
+
+            if(resQ.value("outdt")==""){
+
+                where = "id="+resQ.value("id");
+
+                QStringList sets;
+                sets.append("outdt='"+QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss")+"'");
+
+                dao.updateRow("giorni",sets,where);
+
+                lcd = "Uscita";
+                lcd = lcd+repeat.repeated(16 - lcd.length());
+                //wLcd->write(0,0,lcd.toUtf8().data());
+                WriteLcdT(0,0,lcd,true);
+
+                lcd = name;
+                lcd = lcd+repeat.repeated(16 - lcd.length());
+                //wLcd->write(0,1,lcd.toUtf8().data());
+                WriteLcdT(0,1,lcd,false);
+            }else{
+
+                field.insert("data",QDateTime::currentDateTime().toString("yyyy-MM-dd"));
+                field.insert("id_worker",idW);
+                field.insert("indt",QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+                dao.insertRow("giorni",field);
+
+                lcd = "Entrata";
+                lcd = lcd+repeat.repeated(16 - lcd.length());
+                //wLcd->write(0,0,lcd.toUtf8().data());
+                WriteLcdT(0,0,lcd,true);
+
+                lcd = name;
+                lcd = lcd+repeat.repeated(16 - lcd.length());
+                //wLcd->write(0,1,lcd.toUtf8().data());
+                WriteLcdT(0,1,lcd,false);
+
+            }
+
+        }
+
+    }else{
+
+        lcd = "errore";
+        lcd = lcd+repeat.repeated(16 - lcd.length());
+        //wLcd->write(0,0,lcd.toUtf8().data());
+        WriteLcdT(0,0,lcd,true);
+
+        lcd = "badge non valido";
+        lcd = lcd+repeat.repeated(16 - lcd.length());
+        //wLcd->write(0,1,lcd.toUtf8().data());
+        WriteLcdT(0,1,lcd,false);
+
     }
 
 }

@@ -8,6 +8,7 @@
 #include <QTimer>
 #include "lib/writelcd.h"
 #include "lib/writedbserver.h"
+#include "lib/dao.h"
 
 class NfcThread : public QThread
 {
@@ -25,6 +26,9 @@ private:
     QTimer *tdb;
     void WriteLcdT(int x,int y, QString data,bool clear);
     WriteDbServer wdbserver;
+    void WriteDB(QString id);
+    Dao dao;
+    QHash<QString,QString> field;
 public slots:
     void ViewData();
 };

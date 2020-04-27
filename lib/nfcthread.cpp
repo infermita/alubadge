@@ -85,6 +85,7 @@ void NfcThread::run(){
             field.insert("id",o["id"].toString());
             field.insert("cardkey",o["cardkey"].toString());
             field.insert("`name`",o["name_lastname"].toString());
+            field.insert("`autocomplete`",o["autocomplete"].toString());
 
             if(dao.replaceRow("workers",field)){
                 qDebug() << "Ok insert: " << o["id"].toString();
@@ -102,7 +103,7 @@ void NfcThread::run(){
     WriteLcdT(0,0,lcd,true);
     vieData = 1;
 
-    //WriteDB("350938BE");
+    //WriteDB("ABF0854B");
 
     while(1){
         nfc_init(&context);
@@ -232,12 +233,13 @@ void NfcThread::WriteDB(QString id){
 
     QHash<QString,QString> resQ = dao.singleRow("workers","cardkey='"+id+"'");
     field.clear();
-    QString lcd,repeat = " ",idW,name,where;
+    QString lcd,repeat = " ",idW,name,where,autocomplete;
     bool res;
     if(resQ.count()){
 
         idW = resQ.value("id");
         name = resQ.value("name");
+        autocomplete = resQ.value("autocomplete");
         resQ = dao.singleRow("giorni","id_worker='"+idW+"' ORDER BY id DESC LIMIT 1");
 
         if(resQ.count()==0){
@@ -245,6 +247,13 @@ void NfcThread::WriteDB(QString id){
             field.insert("data",QDateTime::currentDateTime().toString("yyyy-MM-dd"));
             field.insert("id_worker",idW);
             field.insert("indt",QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+
+            if(autocomplete=="SI"){
+
+                field.insert("outdt",QDateTime::currentDateTime().addSecs(30540).toString("yyyy-MM-dd hh:mm:ss"));
+
+            }
+
             res = dao.insertRow("giorni",field);
 
             if(res){
@@ -294,14 +303,32 @@ void NfcThread::WriteDB(QString id){
                 }
             }else{
 
-                field.insert("data",QDateTime::currentDateTime().toString("yyyy-MM-dd"));
-                field.insert("id_worker",idW);
-                field.insert("indt",QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
-                res = dao.insertRow("giorni",field);
+                if(autocomplete=="NO"){
 
-                if(res){
+                    field.insert("data",QDateTime::currentDateTime().toString("yyyy-MM-dd"));
+                    field.insert("id_worker",idW);
+                    field.insert("indt",QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+                    res = dao.insertRow("giorni",field);
 
-                    lcd = "Entrata";
+                    if(res){
+
+                        lcd = "Entrata";
+                        lcd = lcd+repeat.repeated(16 - lcd.length());
+                        //wLcd->write(0,0,lcd.toUtf8().data());
+                        WriteLcdT(0,0,lcd,true);
+
+                        lcd = name;
+                        lcd = lcd+repeat.repeated(16 - lcd.length());
+                        //wLcd->write(0,1,lcd.toUtf8().data());
+                        WriteLcdT(0,1,lcd,false);
+                    }else{
+                        lcd = "errore database";
+                        lcd = lcd+repeat.repeated(16 - lcd.length());
+                        //wLcd->write(0,0,lcd.toUtf8().data());
+                        WriteLcdT(0,0,lcd,true);
+                    }
+                }else{
+                    lcd = "GIA' TIMBRATO";
                     lcd = lcd+repeat.repeated(16 - lcd.length());
                     //wLcd->write(0,0,lcd.toUtf8().data());
                     WriteLcdT(0,0,lcd,true);
@@ -310,11 +337,6 @@ void NfcThread::WriteDB(QString id){
                     lcd = lcd+repeat.repeated(16 - lcd.length());
                     //wLcd->write(0,1,lcd.toUtf8().data());
                     WriteLcdT(0,1,lcd,false);
-                }else{
-                    lcd = "errore database";
-                    lcd = lcd+repeat.repeated(16 - lcd.length());
-                    //wLcd->write(0,0,lcd.toUtf8().data());
-                    WriteLcdT(0,0,lcd,true);
                 }
 
             }

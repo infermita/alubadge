@@ -35,7 +35,7 @@ Dao::Dao()
 
         }else{
 
-            sql = "CREATE TABLE workers (id INT PRIMARY KEY NOT NULL,cardkey char(30),name char(60));";
+            sql = "CREATE TABLE workers (id INT PRIMARY KEY NOT NULL,cardkey char(30),name char(60),autocomplete char(60));";
             res = query.exec(sql);
             sql = "CREATE TABLE `giorni` (`id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,`id_commesse`	INTEGER NOT NULL DEFAULT 5,`id_worker`	INTEGER NOT NULL DEFAULT 0,`data`	NUMERIC,`indt`	NUMERIC,`outdt`	NUMERIC);";
             res = query.exec(sql);

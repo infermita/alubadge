@@ -25,9 +25,9 @@ private:
     int writedb;
     QTimer *tdb;
     void WriteLcdT(int x,int y, QString data,bool clear);
-    WriteDbServer wdbserver;
+    WriteDbServer *wdbserver;
     void WriteDB(QString id);
-    Dao dao;
+    Dao *dao;
     QHash<QString,QString> field;
     int hour;
 public slots:

@@ -226,7 +226,7 @@ bool Dao::deleteRow(QString table, QString where){
     QSqlQuery query(db);
 
     QString sql = "DELETE FROM "+table+" WHERE "+where;
-    //qDebug() << sql;
+    qDebug() << sql;
 
     if(query.exec(sql))
         ret = true;

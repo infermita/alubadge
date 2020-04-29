@@ -7,15 +7,15 @@
 #include "lib/dao.h"
 #include "lib/httpclient.h"
 
-WriteDbServer::WriteDbServer()
+WriteDbServer::WriteDbServer(Dao *dObj)
 {
-
+    d = dObj;
 }
 void WriteDbServer::run(){
 
     qDebug() << "Write db on server";
     //sleep(62);
-    Dao d;
+    //Dao d;
     QJsonArray arr;
     QJsonObject obj;
     HttpClient http;
@@ -23,7 +23,7 @@ void WriteDbServer::run(){
 
     while(!res){
 
-        QList< QHash<QString, QString> > resQ = d.listRow("giorni","*","");
+        QList< QHash<QString, QString> > resQ = d->listRow("giorni","*","");
         QHash<QString, QString>::const_iterator iF;
 
         for(int i = 0; i < resQ.length();i++){
@@ -45,10 +45,10 @@ void WriteDbServer::run(){
 
         if(res){
 
-            d.deleteRow("giorni","1");
+            d->deleteRow("giorni","1");
             QStringList sets;
             sets.append("seq='0'");
-            d.updateRow("sqlite_sequence",sets,"name='giorni'");
+            d->updateRow("sqlite_sequence",sets,"name='giorni'");
 
         }
 

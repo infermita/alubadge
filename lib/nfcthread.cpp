@@ -8,6 +8,7 @@
 #include <QDateTime>
 #include <QJsonArray>
 #include <QCoreApplication>
+#include <QFile>
 
 NfcThread::NfcThread()
 {
@@ -38,7 +39,9 @@ void NfcThread::run(){
     QJsonParseError *error = new QJsonParseError();
     QJsonDocument d;
 
+    dao = new Dao();
 
+    wdbserver = new WriteDbServer(dao);
     //wLcd->clear();
     //wLcd->write(0,0,"Attesa rete     ");
     WriteLcdT(0,0,"Attesa rete     ",true);
@@ -69,7 +72,7 @@ void NfcThread::run(){
 
     if(error->error==QJsonParseError::NoError){
 
-        dao.deleteRow("cards","1");
+        dao->deleteRow("cards","1");
 
         QJsonObject jObj = d.object();
         QJsonArray listUsers;
@@ -87,7 +90,7 @@ void NfcThread::run(){
             field.insert("`name`",o["name_lastname"].toString());
             field.insert("`autocomplete`",o["autocomplete"].toString());
 
-            if(dao.replaceRow("workers",field)){
+            if(dao->replaceRow("workers",field)){
                 qDebug() << "Ok insert: " << o["id"].toString();
             }else{
                 qDebug() << "Error insert: " << o["id"].toString();
@@ -103,7 +106,7 @@ void NfcThread::run(){
     WriteLcdT(0,0,lcd,true);
     vieData = 1;
 
-    //WriteDB("ABF0854B");
+    //WriteDB("BB05914B");
 
     while(1){
         nfc_init(&context);
@@ -198,15 +201,19 @@ void NfcThread::ViewData(){
     }
     //int sec = QTime::currentTime().hour();
     //qDebug() << "Seconds " << sec;
-    if(hour==QTime::currentTime().hour()){
+    bool file =QFile::exists("/tmp/forceup");
+
+    if(hour==QTime::currentTime().hour() || file){
+
+        QFile::remove("/tmp/forceup");
 
         if(writedb==0){
 
-            if(wdbserver.isRunning()){
+            if(wdbserver->isRunning()){
                 qDebug() << "Il thread webdbserver sta ancora girando, controllare";
             }else{
                 qDebug() << "Parte thread webdbserver ore " << hour;
-                wdbserver.start();
+                wdbserver->start();
                 writedb = 1;
             }
         }
@@ -231,7 +238,7 @@ void NfcThread::WriteLcdT(int x,int y, QString data,bool clear){
 }
 void NfcThread::WriteDB(QString id){
 
-    QHash<QString,QString> resQ = dao.singleRow("workers","cardkey='"+id+"'");
+    QHash<QString,QString> resQ = dao->singleRow("workers","cardkey='"+id+"'");
     field.clear();
     QString lcd,repeat = " ",idW,name,where,autocomplete;
     bool res;
@@ -240,7 +247,7 @@ void NfcThread::WriteDB(QString id){
         idW = resQ.value("id");
         name = resQ.value("name");
         autocomplete = resQ.value("autocomplete");
-        resQ = dao.singleRow("giorni","id_worker='"+idW+"' ORDER BY id DESC LIMIT 1");
+        resQ = dao->singleRow("giorni","id_worker='"+idW+"' ORDER BY id DESC LIMIT 1");
 
         if(resQ.count()==0){
 
@@ -254,7 +261,7 @@ void NfcThread::WriteDB(QString id){
 
             }
 
-            res = dao.insertRow("giorni",field);
+            res = dao->insertRow("giorni",field);
 
             if(res){
 
@@ -282,7 +289,7 @@ void NfcThread::WriteDB(QString id){
                 QStringList sets;
                 sets.append("outdt='"+QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss")+"'");
 
-                res = dao.updateRow("giorni",sets,where);
+                res = dao->updateRow("giorni",sets,where);
 
                 if(res){
 
@@ -308,7 +315,7 @@ void NfcThread::WriteDB(QString id){
                     field.insert("data",QDateTime::currentDateTime().toString("yyyy-MM-dd"));
                     field.insert("id_worker",idW);
                     field.insert("indt",QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
-                    res = dao.insertRow("giorni",field);
+                    res = dao->insertRow("giorni",field);
 
                     if(res){
 

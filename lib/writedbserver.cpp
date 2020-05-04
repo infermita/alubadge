@@ -4,6 +4,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QDebug>
+#include <QDateTime>
 #include "lib/dao.h"
 #include "lib/httpclient.h"
 
@@ -23,8 +24,12 @@ void WriteDbServer::run(){
 
     while(!res){
 
-        QList< QHash<QString, QString> > resQ = d->listRow("giorni","*","");
+        QString dtSc = QDateTime::currentDateTime().addDays(-1).toString("yyyy-MM-dd");
+
+        QList< QHash<QString, QString> > resQ = d->listRow("giorni","*","data='"+dtSc+"'");
         QHash<QString, QString>::const_iterator iF;
+
+        arr = QJsonArray();
 
         for(int i = 0; i < resQ.length();i++){
             QJsonObject tmp;
@@ -45,11 +50,13 @@ void WriteDbServer::run(){
 
         if(res){
 
-            d->deleteRow("giorni","1");
+            d->deleteRow("giorni","data='"+dtSc+"'");
             QStringList sets;
             sets.append("seq='0'");
             d->updateRow("sqlite_sequence",sets,"name='giorni'");
 
+        }else{
+            sleep(10);
         }
 
     }

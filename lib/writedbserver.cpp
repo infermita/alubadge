@@ -51,9 +51,11 @@ void WriteDbServer::run(){
         if(res){
 
             d->deleteRow("giorni","data='"+dtSc+"'");
-            QStringList sets;
-            sets.append("seq='0'");
-            d->updateRow("sqlite_sequence",sets,"name='giorni'");
+            if(QDateTime::currentDateTime().date().dayOfWeek()==7){
+                QStringList sets;
+                sets.append("seq='0'");
+                d->updateRow("sqlite_sequence",sets,"name='giorni'");
+            }
 
         }else{
             sleep(10);

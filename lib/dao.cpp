@@ -36,7 +36,7 @@ Dao::Dao()
 
         if(record.count()){
 
-            qDebug() << "db esiste";
+            qDebug() << "db esiste " << path;
 
         }else{
 
@@ -45,7 +45,7 @@ Dao::Dao()
             sql = "CREATE TABLE `giorni` (`id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,`id_commesse`	INTEGER NOT NULL DEFAULT 5,`id_worker`	INTEGER NOT NULL DEFAULT 0,`data`	NUMERIC,`indt`	NUMERIC,`outdt`	NUMERIC);";
             res = query.exec(sql);
 
-            qDebug() << "db non esiste";
+            qDebug() << "db non esiste " << path;
 
         }
         //if(res)

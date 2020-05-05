@@ -9,7 +9,12 @@
 
 Dao::Dao()
 {
-    QString path = "/tmp/alubadge.db";
+    QString path = "/home/root/alubadge.db";
+
+    if(QString(getenv("USER"))=="alberto"){
+        path = "/tmp/alubadge.db";
+    }
+
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(path);
     if(db.open()){

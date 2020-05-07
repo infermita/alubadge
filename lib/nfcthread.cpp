@@ -106,7 +106,7 @@ void NfcThread::run(){
     WriteLcdT(0,0,lcd,true);
     vieData = 1;
 
-    WriteDB("25D9B1A5");
+    //WriteDB("25D9B1A5");
 
     while(1){
         nfc_init(&context);

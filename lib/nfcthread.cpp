@@ -106,7 +106,7 @@ void NfcThread::run(){
     WriteLcdT(0,0,lcd,true);
     vieData = 1;
 
-    //WriteDB("BB05914B");
+    WriteDB("25D9B1A5");
 
     while(1){
         nfc_init(&context);
@@ -352,6 +352,33 @@ void NfcThread::WriteDB(QString id){
 
     }else{
 
+        HttpClient http;
+        QJsonParseError *error = new QJsonParseError();
+        QString url = "/default/json/badge/cardkeyw/"+id;
+        QString resp = http.Get(url);
+
+        QJsonDocument d = QJsonDocument::fromJson(resp.toUtf8(),error);
+
+        if(error->error==QJsonParseError::NoError){
+
+            lcd = d.object().value("mess").toString();
+            lcd = lcd+repeat.repeated(16 - lcd.length());
+            //wLcd->write(0,0,lcd.toUtf8().data());
+            WriteLcdT(0,0,lcd,true);
+
+            lcd = d.object().value("name").toString();
+            lcd = lcd+repeat.repeated(16 - lcd.length());
+            //wLcd->write(0,1,lcd.toUtf8().data());
+            WriteLcdT(0,1,lcd,false);
+
+        }else{
+
+            lcd = "Errore Server";
+            lcd = lcd+repeat.repeated(16 - lcd.length());
+            //wLcd->write(0,0,lcd.toUtf8().data());
+            WriteLcdT(0,0,lcd,true);
+        }
+        /*
         lcd = "errore";
         lcd = lcd+repeat.repeated(16 - lcd.length());
         //wLcd->write(0,0,lcd.toUtf8().data());
@@ -361,6 +388,7 @@ void NfcThread::WriteDB(QString id){
         lcd = lcd+repeat.repeated(16 - lcd.length());
         //wLcd->write(0,1,lcd.toUtf8().data());
         WriteLcdT(0,1,lcd,false);
+        */
 
     }
 

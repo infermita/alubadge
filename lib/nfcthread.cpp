@@ -247,7 +247,16 @@ void NfcThread::WriteDB(QString id){
         idW = resQ.value("id");
         name = resQ.value("name");
         autocomplete = resQ.value("autocomplete");
-        resQ = dao->singleRow("giorni","id_worker='"+idW+"' ORDER BY id DESC LIMIT 1");
+
+        if(autocomplete=="NO"){
+
+            resQ = dao->singleRow("giorni","id_worker='"+idW+"' ORDER BY id DESC LIMIT 1");
+
+        }else{
+
+            resQ = dao->singleRow("giorni","id_worker='"+idW+"' AND data=date('now')");
+
+        }
 
         if(resQ.count()==0){
 
@@ -335,6 +344,7 @@ void NfcThread::WriteDB(QString id){
                         WriteLcdT(0,0,lcd,true);
                     }
                 }else{
+
                     lcd = "GIA' TIMBRATO";
                     lcd = lcd+repeat.repeated(16 - lcd.length());
                     //wLcd->write(0,0,lcd.toUtf8().data());

@@ -9,6 +9,7 @@
 #include <QJsonArray>
 #include <QCoreApplication>
 #include <QFile>
+#include <QFileInfo>
 
 NfcThread::NfcThread()
 {
@@ -260,31 +261,41 @@ void NfcThread::WriteDB(QString id){
 
         if(resQ.count()==0){
 
-            field.insert("data",QDateTime::currentDateTime().toString("yyyy-MM-dd"));
-            field.insert("id_worker",idW);
-            field.insert("indt",QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+            if(QFileInfo::exists("/tmp/grpass")){
 
-            if(autocomplete=="SI"){
+                QFile::remove("/tmp/grpass");
 
-                field.insert("outdt",QDateTime::currentDateTime().addSecs(30540).toString("yyyy-MM-dd hh:mm:ss"));
+                field.insert("data",QDateTime::currentDateTime().toString("yyyy-MM-dd"));
+                field.insert("id_worker",idW);
+                field.insert("indt",QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
 
-            }
+                if(autocomplete=="SI"){
 
-            res = dao->insertRow("giorni",field);
+                    field.insert("outdt",QDateTime::currentDateTime().addSecs(30540).toString("yyyy-MM-dd hh:mm:ss"));
 
-            if(res){
+                }
 
-                lcd = "Entrata";
-                lcd = lcd+repeat.repeated(16 - lcd.length());
-                //wLcd->write(0,0,lcd.toUtf8().data());
-                WriteLcdT(0,0,lcd,true);
+                res = dao->insertRow("giorni",field);
 
-                lcd = name;
-                lcd = lcd+repeat.repeated(16 - lcd.length());
-                //wLcd->write(0,1,lcd.toUtf8().data());
-                WriteLcdT(0,1,lcd,false);
+                if(res){
+
+                    lcd = "ENTRATA";
+                    lcd = lcd+repeat.repeated(16 - lcd.length());
+                    //wLcd->write(0,0,lcd.toUtf8().data());
+                    WriteLcdT(0,0,lcd,true);
+
+                    lcd = name;
+                    lcd = lcd+repeat.repeated(16 - lcd.length());
+                    //wLcd->write(0,1,lcd.toUtf8().data());
+                    WriteLcdT(0,1,lcd,false);
+                }else{
+                    lcd = "ERRORE DATABASE";
+                    lcd = lcd+repeat.repeated(16 - lcd.length());
+                    //wLcd->write(0,0,lcd.toUtf8().data());
+                    WriteLcdT(0,0,lcd,true);
+                }
             }else{
-                lcd = "errore database";
+                lcd = "MANCA GREEN PASS";
                 lcd = lcd+repeat.repeated(16 - lcd.length());
                 //wLcd->write(0,0,lcd.toUtf8().data());
                 WriteLcdT(0,0,lcd,true);
@@ -302,7 +313,7 @@ void NfcThread::WriteDB(QString id){
 
                 if(res){
 
-                    lcd = "Uscita";
+                    lcd = "USCITA";
                     lcd = lcd+repeat.repeated(16 - lcd.length());
                     //wLcd->write(0,0,lcd.toUtf8().data());
                     WriteLcdT(0,0,lcd,true);
@@ -312,7 +323,7 @@ void NfcThread::WriteDB(QString id){
                     //wLcd->write(0,1,lcd.toUtf8().data());
                     WriteLcdT(0,1,lcd,false);
                 }else{
-                    lcd = "errore database";
+                    lcd = "ERRORE DATABASE";
                     lcd = lcd+repeat.repeated(16 - lcd.length());
                     //wLcd->write(0,0,lcd.toUtf8().data());
                     WriteLcdT(0,0,lcd,true);
@@ -328,7 +339,7 @@ void NfcThread::WriteDB(QString id){
 
                     if(res){
 
-                        lcd = "Entrata";
+                        lcd = "ENTRATA";
                         lcd = lcd+repeat.repeated(16 - lcd.length());
                         //wLcd->write(0,0,lcd.toUtf8().data());
                         WriteLcdT(0,0,lcd,true);
@@ -338,7 +349,7 @@ void NfcThread::WriteDB(QString id){
                         //wLcd->write(0,1,lcd.toUtf8().data());
                         WriteLcdT(0,1,lcd,false);
                     }else{
-                        lcd = "errore database";
+                       lcd = "ERRORE DATABASE";
                         lcd = lcd+repeat.repeated(16 - lcd.length());
                         //wLcd->write(0,0,lcd.toUtf8().data());
                         WriteLcdT(0,0,lcd,true);
@@ -383,7 +394,7 @@ void NfcThread::WriteDB(QString id){
 
         }else{
 
-            lcd = "Errore Server";
+            lcd = "ERRORE SERVER";
             lcd = lcd+repeat.repeated(16 - lcd.length());
             //wLcd->write(0,0,lcd.toUtf8().data());
             WriteLcdT(0,0,lcd,true);

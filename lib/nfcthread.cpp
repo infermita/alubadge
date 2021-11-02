@@ -10,6 +10,7 @@
 #include <QCoreApplication>
 #include <QFile>
 #include <QFileInfo>
+#include <QProcess>
 
 NfcThread::NfcThread()
 {
@@ -295,6 +296,7 @@ void NfcThread::WriteDB(QString id){
                     WriteLcdT(0,0,lcd,true);
                 }
             }else{
+                QProcess::execute("ssh root@greenpass touch /tmp/grpass");
                 lcd = "MANCA GREEN PASS";
                 lcd = lcd+repeat.repeated(16 - lcd.length());
                 //wLcd->write(0,0,lcd.toUtf8().data());
